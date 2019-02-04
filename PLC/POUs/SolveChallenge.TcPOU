@@ -1,0 +1,38 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4022.12">
+  <POU Name="SolveChallenge" Id="{2ae931ee-cf3f-45f3-993b-24c68a362278}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION SolveChallenge : LREAL
+VAR_INPUT
+	N:INT; //Number of available pancakes
+	K:INT; //Ordered pancakes
+END_VAR
+VAR_IN_OUT
+	Pancakes : ARRAY[0..GVL.MaxArraySize]  OF Pancake; 
+END_VAR
+VAR
+	i:INT;
+	j:INT;
+	PancakesBYSide : ARRAY[0..GVL.MaxArraySize]  OF Pancake; 
+	WorkingArray : ARRAY[0..GVL.MaxArraySize]  OF Pancake; 
+	StackArea:LREAL;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[PanCakeBottomUpMergeSort(N:=N, SortBySideArea:=FALSE,ArrayToSort:=Pancakes, WorkingArray:=WorkingArray);
+
+FOR i:=K-1 TO N-1 DO
+	PancakesBYSide := Pancakes;
+	StackArea :=Pancakes[i].TotalArea;
+	PanCakeBottomUpMergeSort(N:=i, SortBySideArea:=TRUE,ArrayToSort:=PancakesBYSide , WorkingArray:=WorkingArray);
+	FOR j:= 0 TO K-2 DO
+		StackArea:= StackArea + PancakesBYSide[i-1 -j].SideArea;
+	END_FOR
+	SolveChallenge := MAX(SolveChallenge,StackArea);
+END_FOR]]></ST>
+    </Implementation>
+    <LineIds Name="SolveChallenge">
+      <LineId Id="75" Count="9" />
+      <LineId Id="50" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

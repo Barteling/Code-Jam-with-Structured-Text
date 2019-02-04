@@ -1,0 +1,14 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4022.12">
+  <DUT Name="Pancake" Id="{2a0193dd-95d0-4ee7-9e72-c79ffafdedb4}">
+    <Declaration><![CDATA[TYPE Pancake :
+STRUCT
+	Height:DINT;
+	Radius:DINT;
+	SideArea:LREAL;
+	TotalArea:LREAL;
+END_STRUCT
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

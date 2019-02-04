@@ -1,0 +1,36 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4022.12">
+  <POU Name="PanCakeBottomUpMergeSort" Id="{5904b16a-39c5-4ff4-8234-346b36794f28}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION PanCakeBottomUpMergeSort
+VAR_INPUT
+	N:INT;//Number of elements
+	SortBySideArea:BOOL; //True to sort the array by the side area of the pancakes. Other wise sort by radius
+END_VAR
+VAR_IN_OUT
+	ArrayToSort: ARRAY[0..GVL.MaxArraySize]  OF Pancake;
+	WorkingArray: ARRAY[0..GVL.MaxArraySize]  OF Pancake;
+END_VAR
+VAR 
+	Width:INT;
+	i:INT;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[Width:=1;
+WHILE (Width < N) DO
+	i:=0;
+	WHILE (i<N)DO
+		BottomUpMerge(i,	MIN (i+Width,N),MIN(i+2*width, N),SortBySideArea,ArrayToSort,WorkingArray);
+		i:=i+2*Width;
+	END_WHILE
+	CopyArray(N:=N,Source:= WorkingArray,Target:=ArrayToSort);	
+	Width:= Width *2;
+END_WHILE]]></ST>
+    </Implementation>
+    <LineIds Name="PanCakeBottomUpMergeSort">
+      <LineId Id="72" Count="6" />
+      <LineId Id="96" Count="0" />
+      <LineId Id="80" Count="1" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

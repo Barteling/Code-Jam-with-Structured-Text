@@ -1,0 +1,43 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4022.12">
+  <POU Name="BottomUpMerge" Id="{dd1ecbf4-9e68-468c-9cf0-bf56ce2d519e}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION BottomUpMerge
+VAR_INPUT
+	Left:INT;
+	Right:INT;
+	End:INT;
+	SortBySideArea:BOOL;//True to sort the array by the side area of the pancakes. Other wise sort by radius
+END_VAR
+VAR_IN_OUT
+	ArrayToSort: ARRAY[0..GVL.MaxArraySize]  OF Pancake;
+	WorkingArray: ARRAY[0..GVL.MaxArraySize]  OF Pancake;
+END_VAR
+VAR
+	i:INT;
+	j:INT;
+	k:INT;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[i:=Left;
+j:=Right;
+FOR k:=left TO End DO
+	IF (i<Right AND (j >=End OR 
+			((NOT SortBySideArea AND ArrayToSort[i].Radius <=ArrayToSort[j].Radius) OR
+			(SortBySideArea AND ArrayToSort[i].SideArea <=ArrayToSort[j].SideArea)))) THEN			
+		WorkingArray[k] := ArrayToSort[i];
+		i:=i+1;
+	ELSE
+		WorkingArray[k] := ArrayToSort[j];
+		j:=j+1;
+	END_IF
+END_FOR]]></ST>
+    </Implementation>
+    <LineIds Name="BottomUpMerge">
+      <LineId Id="90" Count="3" />
+      <LineId Id="117" Count="1" />
+      <LineId Id="94" Count="5" />
+      <LineId Id="24" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

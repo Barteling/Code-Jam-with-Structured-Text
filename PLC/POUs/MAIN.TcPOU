@@ -1,0 +1,159 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4022.12">
+  <POU Name="MAIN" Id="{7d9984c6-0364-4bd7-aca4-b6ef24a7ebdb}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM MAIN
+VAR
+	StartingTrigger:R_TRIG;	
+	fbStringReader:FB_FileGets;
+	fbFileOpener:FB_FileOpen;
+	fbFileCloser:FB_FileClose;
+	fbFileWriter:FB_FilePuts;
+	State:INT;
+	Execute:BOOL;
+	T:INT; //Number of challenges
+	N:INT; //Number of available pancakes
+	K:INT; //Ordered pancakes
+	Pancakes : ARRAY[0..GVL.MaxArraySize]  OF Pancake;  
+	PancakeCounter:INT;
+	ChallengeCounter:INT;
+	Error:BOOL;
+	ErrorCode:UDINT;
+	SplitPosition:INT;
+END_VAR
+
+    ]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[StartingTrigger(CLK:=Execute);
+CASE State OF
+	0: 	IF StartingTrigger.Q THEN
+			State:=State+1;
+			fbFileOpener.bExecute :=FALSE;
+		END_IF
+	 
+	1:	fbFileOpener.sPathName :='C:\A-large-practice.in';
+		fbFileOpener.nMode := FOPEN_MODEREAD;
+		fbFileOpener.ePath := PATH_GENERIC;
+		fbFileOpener(bExecute:=FALSE);
+		fbFileOpener(bExecute:=TRUE);
+		State:=State+1;
+		
+	2: 	fbFileOpener(bExecute:=FALSE);
+		IF fbFileOpener.bError THEN
+			State:=10;
+			Error:=TRUE;
+			ErrorCode:=fbFileOpener.nErrId;
+		ELSIF NOT fbFileOpener.bBusy THEN			
+			State:=State+1;
+			fbStringReader.hFile := fbFileOpener.hFile;
+			fbFileOpener.sPathName :='C:\Solution.out';
+			fbFileOpener.nMode := FOPEN_MODEWRITE;
+			fbFileOpener.ePath := PATH_GENERIC;			
+			fbFileOpener(bExecute:=TRUE);
+		END_IF  
+ 
+	3: 	fbFileOpener(bExecute:=FALSE);
+		IF fbFileOpener.bError THEN
+			State:=10;
+			Error:=TRUE;
+			ErrorCode:=fbFileOpener.nErrId;
+		ELSIF NOT fbFileOpener.bBusy THEN			
+			State:=State+1;
+			fbFileWriter.hFile := fbFileOpener.hFile;
+		END_IF  
+		
+	4: 	fbStringReader.tTimeout:= T#1S;
+		fbStringReader(bExecute := FALSE);
+		fbStringReader(bExecute := TRUE );
+		State:=State+1;
+		
+	5:  fbStringReader(bExecute := FALSE);
+		IF fbStringReader.bError THEN
+			State:=10;
+			Error:=TRUE;
+			ErrorCode:=fbStringReader.nErrId;
+ 		ELSIF NOT fbStringReader.bBusy THEN
+			T := STRING_TO_INT(fbStringReader.sLine);
+			ChallengeCounter :=0;
+			fbStringReader(bExecute := TRUE);
+			State:=State+1;
+		END_IF
+		
+	6 : fbStringReader(bExecute := FALSE);
+		IF fbStringReader.bError THEN
+			State:=10;
+			Error:=TRUE;
+			ErrorCode:=fbStringReader.nErrId;
+ 		ELSIF NOT fbStringReader.bBusy THEN			
+			SplitPosition := FIND(STR1:= fbStringReader.sLine, str2:= ' ');
+			N:=STRING_TO_INT(LEFT(STR:=fbStringReader.sLine,SplitPosition));
+			K:=STRING_TO_INT(MID(STR:=fbStringReader.sLine,LEN:= LEN(fbStringReader.sLine)-2,POS:=SplitPosition));	
+			fbStringReader(bExecute := TRUE);
+			State:=State+1;
+			PancakeCounter :=0;
+		END_IF	
+		
+	7 : fbStringReader(bExecute := FALSE);	
+		IF fbStringReader.bError THEN
+			State:=10;
+			Error:=TRUE;
+			ErrorCode:=fbStringReader.nErrId;
+ 		ELSIF NOT fbStringReader.bBusy THEN			
+			SplitPosition := FIND(STR1:= fbStringReader.sLine, str2:= ' ');
+			Pancakes[PancakeCounter].Radius:=STRING_TO_DINT(LEFT(STR:=fbStringReader.sLine,SplitPosition));
+			Pancakes[PancakeCounter].Height:=STRING_TO_DINT(MID(STR:=fbStringReader.sLine,LEN:= LEN(fbStringReader.sLine)-2,POS:=SplitPosition));	
+			Pancakes[PancakeCounter].SideArea:= 2*PI*Pancakes[PancakeCounter].Radius *Pancakes[PancakeCounter].Height;
+			Pancakes[PancakeCounter].TotalArea :=PI *Pancakes[PancakeCounter].Radius *Pancakes[PancakeCounter].Radius +Pancakes[PancakeCounter].SideArea;
+			PancakeCounter:=PancakeCounter+1;
+			IF PancakeCounter = N THEN 
+				State:=State+1;
+			ELSE
+				fbStringReader(bExecute := TRUE);	 
+			END_IF
+		END_IF		
+		
+	8:	fbFileWriter.sLine := CONCAT(CONCAT('Case #',INT_TO_STRING(ChallengeCounter+1)),': ');
+		fbFileWriter.sLine := CONCAT(fbFileWriter.sLine,LREAL_TO_STRING(SolveChallenge(N:=N,K:=K,Pancakes:=Pancakes)));
+		fbFileWriter.sLine := CONCAT(fbFileWriter.sLine,'$N');
+		fbFileWriter.tTimeout :=T#1S;	
+		fbFileWriter(bExecute:=FALSE);
+		fbFileWriter(bExecute:=TRUE);		
+		State:=State+1;
+				
+	9:	fbFileWriter(bExecute:=FALSE);
+		IF NOT fbFileWriter.bBusy THEN 
+			ChallengeCounter:= ChallengeCounter +1;
+			IF ChallengeCounter < T THEN
+				State:=6;
+				fbStringReader(bExecute := TRUE);	 
+			ELSE
+				State:=State+1;
+			END_IF			
+		END_IF
+		
+	10: fbFileCloser.hFile := fbFileOpener.hFile;
+		fbFileCloser.tTimeout :=T#1S;
+		fbFileCloser(bExecute:=FALSE);
+		fbFileCloser(bExecute:=TRUE);
+		State:=State+1;
+		
+	11: fbFileCloser(bExecute:=FALSE);
+		IF NOT fbFileCloser.bBusy THEN
+			fbFileCloser.hFile := fbFileOpener.hFile;				
+			fbFileCloser(bExecute:=TRUE);
+			State:=State+1;
+		END_IF
+		
+ 	12: fbFileCloser(bExecute:=FALSE);
+		IF NOT fbFileCloser.bBusy THEN										
+			State:=0;
+		END_IF
+ END_CASE
+
+ ]]></ST>
+    </Implementation>
+    <LineIds Name="MAIN">
+      <LineId Id="698" Count="125" />
+      <LineId Id="273" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>
