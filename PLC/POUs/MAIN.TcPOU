@@ -130,7 +130,7 @@ CASE State OF
 			END_IF			
 		END_IF
 		
-	10: fbFileCloser.hFile := fbFileOpener.hFile;
+	10: fbFileCloser.hFile := fbFileWriter.hFile;
 		fbFileCloser.tTimeout :=T#1S;
 		fbFileCloser(bExecute:=FALSE);
 		fbFileCloser(bExecute:=TRUE);
@@ -138,8 +138,8 @@ CASE State OF
 		
 	11: fbFileCloser(bExecute:=FALSE);
 		IF NOT fbFileCloser.bBusy THEN
-			fbFileCloser.hFile := fbFileOpener.hFile;				
-			fbFileCloser(bExecute:=TRUE);
+			fbFileCloser.hFile := fbStringReader.hFile;
+   			fbFileCloser(bExecute:=TRUE);
 			State:=State+1;
 		END_IF
 		
